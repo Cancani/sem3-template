@@ -1,0 +1,10 @@
+stages:
+  - deploy
+
+deploy_prod:
+  stage: deploy
+  script:
+    - echo "Deploying to EC2"
+    - ssh ubuntu@YOUR_EC2 "cd ma-room-template && git pull && bash restart.sh"
+  only:
+    - main
