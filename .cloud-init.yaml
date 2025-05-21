@@ -1,0 +1,24 @@
+#cloud-config
+users:
+  - default
+  - name: ubuntu
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    ssh-authorized-keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCjVJHeUCI/wTfYtewQzYxEi9M7TTI4kvQHXfkcSYVk+Sw09w9+bdBdHCVZbXE4W3mxO66iwRXS/jmZ8VQn1CRfjUNu7GVMu1sBpi+670snSW+KAvH/QxjtWtostxSB9asFssnjpwlAlFeu4XCZhEnE/b0nwCNbdhK7Y0aMJMxb2yIMQaJvfrFz0k4VDJG9HGh4XvUnRE8IyYuszcF7Arpz21d+j8y/PJP54Fg6NXm5/7IxewTTsLFhmhoPkSwaPJyGprNepFBfIyQC/7JInTdM9nbXYmqMrYuhKAFB74vATnKAMwJXwOY3y9qDp0jbNUkoALsTr3K5cFa/WbhLXlkb
+
+package_update: true
+packages:
+  - git
+  - python3-venv
+  - python3-pip
+
+runcmd:
+  - cd /home/ubuntu
+  - git clone https://gitlab.com/Cancani/sem3-template.git
+  - cd sem3-template
+  - python3 -m venv venv
+  - source venv/bin/activate
+  - pip install -r requirements.txt || true
+  - echo "" Deployed and ready, my drilla." > /home/ubuntu/DEPLOYED.txt
