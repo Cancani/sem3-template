@@ -9,17 +9,16 @@ deploy_to_ec2:
     - apk add --no-cache openssh bash
 
   script:
-    # Key abspeichern
-    - echo "🔑 Preparing SSH key"
-    - chmod 600 "$EC2_KEY"
+  - echo "🚀 Deploying to EC2..."
+  - ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" $EC2_USER@$EC2_HOST '
+      if [ ! -d "sem3-template" ]; then
+        git clone https://gitlab.com/Cancani/sem3-template.git
+      fi &&
+      cd sem3-template &&
+      git pull &&
+      bash restart.sh
+    '
 
-    # Code deployen + remote script ausführen
-    - echo "🚀 Deploying to EC2..."
-    - ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" $EC2_USER@$EC2_HOST "
-        cd sem3-template || git clone https://gitlab.com/Cancani/sem3-template.git &&
-        cd sem3-template &&
-        git pull &&
-        bash restart.sh
       "
 
   only:
