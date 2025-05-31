@@ -1,13 +1,13 @@
-stages:
-  - deploy
-
 deploy-job:
   stage: deploy
   image: alpine
   before_script:
     - apk add --no-cache openssh bash
   script:
-    - echo "$EC2_KEY" > ec2_key.pem
+    - |
+      cat <<EOF > ec2_key.pem
+      $EC2_KEY
+      EOF
     - chmod 600 ec2_key.pem
     - echo "🚀 Deploying to EC2..."
     - ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST '
