@@ -1,25 +1,22 @@
 stages:
   - deploy
 
-deploy_to_ec2:
+deploy-job:
   stage: deploy
-  image: alpine:latest
-
+  image: alpine
   before_script:
     - apk add --no-cache openssh bash
-
   script:
-  - echo "🚀 Deploying to EC2..."
-  - ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" $EC2_USER@$EC2_HOST '
-      if [ ! -d "sem3-template" ]; then
-        git clone https://gitlab.com/Cancani/sem3-template.git
-      fi &&
-      cd sem3-template &&
-      git pull &&
-      bash restart.sh
-    '
-
-      "
-
+    - echo "$EC2_KEY" > ec2_key.pem
+    - chmod 600 ec2_key.pem
+    - echo "🚀 Deploying to EC2..."
+    - ssh -o StrictHostKeyChecking=no -i ec2_key.pem $EC2_USER@$EC2_HOST '
+        if [ ! -d "sem3-template" ]; then
+          git clone https://gitlab.com/Cancani/sem3-template.git;
+        fi &&
+        cd sem3-template &&
+        git pull &&
+        bash restart.sh
+      '
   only:
     - main
