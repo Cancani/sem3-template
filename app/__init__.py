@@ -1,6 +1,7 @@
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from app.config import Config
+from app.routes.admin import admin_bp
 
 def create_app():
     app = Flask(__name__)
@@ -18,3 +19,5 @@ def create_app():
     app.register_blueprint(admin_bp, url_prefix='/api/admin')
 
     return app
+
+# Commit

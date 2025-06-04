@@ -1,41 +1,36 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, render_template, request, jsonify, abort
 from flask_jwt_extended import (
     create_access_token, jwt_required, get_jwt_identity
 )
+from app.routes.devices import devices
+from app.routes.history import history
 
 admin_bp = Blueprint('admin', __name__)
 
-# Dummy user
-USERS = {
-    "admin": "password123"
-}
+ADMIN_USER = "admin"
+ADMIN_PASS = "tbz2024"  # Change to your own password!
 
 @admin_bp.route('/login', methods=['POST'])
 def login():
     data = request.json
     username = data.get('username')
     password = data.get('password')
+    if username == ADMIN_USER and password == ADMIN_PASS:
+        access_token = create_access_token(identity=username)
+        return jsonify(access_token=access_token)
+    return jsonify({"msg": "Invalid credentials"}), 401
 
-    if not username or not password:
-        return jsonify({"msg": "Missing username or password"}), 400
-
-    user_pass = USERS.get(username)
-    if not user_pass or user_pass != password:
-        return jsonify({"msg": "Bad username or password"}), 401
-
-    access_token = create_access_token(identity=username)
-    return jsonify(access_token=access_token)
-
-@admin_bp.route('/devices', methods=['POST'])
+@admin_bp.route('/dashboard', methods=['GET'])
 @jwt_required()
-def add_device():
-    current_user = get_jwt_identity()
-    data = request.json
-    # Beispiel: Gerät hinzufügen (hier einfach Bestätigung)
-    name = data.get('name')
-    if not name:
-        return jsonify({"msg": "Missing device name"}), 400
+def dashboard():
+    return render_template('admin.html')
 
-    # TODO: Geräte in Device-Liste oder DB speichern
+@admin_bp.route('/history', methods=['GET'])
+@jwt_required()
+def admin_history():
+    return jsonify(history)
 
-    return jsonify({"msg": f"Device '{name}' added by {current_user}"}), 201
+@admin_bp.route('/devices', methods=['GET'])
+@jwt_required()
+def admin_devices():
+    return jsonify(devices)
