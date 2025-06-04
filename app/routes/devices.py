@@ -1,11 +1,44 @@
-from flask import Blueprint, jsonify, request, abort
+from flask import Blueprint, jsonify, request, abort, render_template
 
 devices_bp = Blueprint('devices', __name__)
 
-# Beispiel-Daten (Später Datenbank oder CSV)
 devices = [
-    {"id": 1, "name": "Laptop 1", "description": "Lenovo ThinkPad", "available": True},
-    {"id": 2, "name": "Adapter USB-C", "description": "USB-C auf HDMI Adapter", "available": True},
+    {
+        "id": 1,
+        "name": "MacBook Pro (16-inch, 2023)",
+        "description": "Apple M2 Pro, 16-core CPU, 19-core GPU, 32GB RAM, 1TB SSD",
+        "available": True
+    },
+    {
+        "id": 2,
+        "name": "ThinkPad X1 Carbon Gen 12",
+        "description": "Intel Core i7-1360P, 16GB RAM, 1TB SSD, 14-inch FHD+ Display",
+        "available": True
+    },
+    {
+        "id": 3,
+        "name": "HP OmniBook Ultra Flip 14",
+        "description": "Intel Core i5-1235U, 8GB RAM, 512GB SSD, 14-inch Touchscreen",
+        "available": True
+    },
+    {
+        "id": 4,
+        "name": "HP Spectre x360",
+        "description": "Intel Core i7-1255U, 16GB RAM, 1TB SSD, 13.5-inch OLED Display",
+        "available": True
+    },
+    {
+        "id": 5,
+        "name": "HP Pavilion Aero 13",
+        "description": "AMD Ryzen 7 5800U, 16GB RAM, 512GB SSD, 13.3-inch WUXGA Display",
+        "available": True
+    },
+    {
+        "id": 6,
+        "name": "Apple iPad Pro 13 (2024)",
+        "description": "Apple M2 Chip, 16GB RAM, 256GB Storage, 12.9-inch Liquid Retina XDR Display",
+        "available": True
+    }
 ]
 
 @devices_bp.route('/', methods=['GET'])
@@ -27,8 +60,9 @@ def borrow_device(device_id):
     if not device['available']:
         return jsonify({"error": "Device is already borrowed"}), 400
 
-    # Beispiel: Markiere als ausgeliehen
     device['available'] = False
-    # Hier könntest du Validierung, Logging, Quittungserstellung usw. einbauen
-
     return jsonify({"message": f"Device {device['name']} borrowed successfully."})
+
+@devices_bp.route('/dashboard')
+def dashboard():
+    return render_template('home.html')
