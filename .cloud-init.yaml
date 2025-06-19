@@ -13,12 +13,15 @@ packages:
   - git
   - python3-venv
   - python3-pip
+  - wkhtmltopdf
 
 runcmd:
   - cd /home/ubuntu
   - git clone https://gitlab.com/Cancani/sem3-template.git
   - cd sem3-template
   - python3 -m venv venv
-  - source venv/bin/activate
-  - pip install -r requirements.txt || true
-  - echo "" Deployed and ready, my drilla." > /home/ubuntu/DEPLOYED.txt
+  - . venv/bin/activate
+  - pip install --upgrade pip
+  - pip install -r requirements.txt
+  - nohup python3 run.py > log.txt 2>&1 &
+  - echo "PDF Microservice deployed & running" > /home/ubuntu/DEPLOYED.txt
