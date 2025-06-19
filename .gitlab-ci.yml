@@ -8,18 +8,19 @@ deploy-job:
     - apk add --no-cache openssh bash
   script:
     - chmod 600 "$EC2_KEY"
-    - echo "🚀 Deploying Flask App to EC2 (no Docker)..."
-    - ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" $EC2_USER@$EC2_HOST '
+    - echo "🚀 Deploying Flask App to EC2..."
+    - |
+      ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" $EC2_USER@$EC2_HOST '
         if [ ! -d "sem3-template" ]; then
-          git clone https://gitlab.com/Cancani/sem3-template.git;
+          git clone https://gitlab.com/Cancani/sem3-template.git
         fi &&
         cd sem3-template &&
         git pull &&
+        pkill -f run.py || true &&
         python3 -m venv venv &&
         source venv/bin/activate &&
         pip install --upgrade pip &&
         pip install -r requirements.txt &&
-        pkill -f run.py || true &&
         nohup python3 run.py > log.txt 2>&1 &
       '
   only:
