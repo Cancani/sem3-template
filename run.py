@@ -1,5 +1,8 @@
 from flask import Flask
+from app.routes.pdf import pdf_bp  # ← hier ist dein PDF Blueprint
+
 app = Flask(__name__)
+app.register_blueprint(pdf_bp)  # ← Blueprint aktivieren
 
 @app.route('/')
 def index():
