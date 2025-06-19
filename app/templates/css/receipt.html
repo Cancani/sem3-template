@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Quittung</title>
+  <style>
+    body { font-family: sans-serif; padding: 40px; }
+    h2 { text-align: center; }
+    .line { margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h2>Geräteausleihe – Quittung</h2>
+  <div class="line"><strong>Borrower:</strong> {{ borrower }}</div>
+  <div class="line"><strong>Gerät:</strong> {{ device }}</div>
+  <div class="line"><strong>Ausleihdatum:</strong> {{ loan_date }}</div>
+  <div class="line"><strong>Rückgabe bis:</strong> {{ return_date }}</div>
+  <div class="line"><strong>Betrag:</strong> {{ amount }} (TWINT bezahlt)</div>
+</body>
+</html>
