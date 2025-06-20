@@ -1,12 +1,9 @@
-version: '3.8'
+version: "3.9"
 
 services:
-  web:
+  pdf-service:
     build: .
+    container_name: pdf_microservice
     ports:
-      - "5000:5000"
-    volumes:
-      - .:/app
-    environment:
-      - FLASK_ENV=development
-    command: flask run --host=0.0.0.0 --reload
+      - "80:5000"
+    restart: always

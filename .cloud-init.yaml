@@ -11,17 +11,13 @@ users:
 package_update: true
 packages:
   - git
-  - python3-venv
-  - python3-pip
-  - wkhtmltopdf
+  - docker.io
+  - docker-compose
 
 runcmd:
+  - usermod -aG docker ubuntu
   - cd /home/ubuntu
   - git clone https://gitlab.com/Cancani/sem3-template.git
   - cd sem3-template
-  - python3 -m venv venv
-  - . venv/bin/activate
-  - pip install --upgrade pip
-  - pip install -r requirements.txt
-  - nohup python3 run.py > log.txt 2>&1 &
-  - echo "PDF Microservice deployed & running" > /home/ubuntu/DEPLOYED.txt
+  - docker-compose -f docker-compose.prod.yaml up --build -d
+  - echo "PDF Microservice running via Docker" > /home/ubuntu/DEPLOYED.txt

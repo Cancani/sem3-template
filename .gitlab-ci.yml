@@ -1,43 +1,27 @@
 stages:
   - deploy
 
-deploy-job:
+deploy-prod:
   stage: deploy
   image: alpine
   before_script:
     - apk add --no-cache openssh-client bash
   script:
-    - echo "🔐 Starte Deployment zu $EC2_USER@$EC2_HOST"
+    - echo "🔐 Setup SSH Key..."
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - echo "$EC2_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -t rsa "$EC2_HOST" >> ~/.ssh/known_hosts
-    - scp nginx/sem3 $EC2_USER@$EC2_HOST:/tmp/nginx_sem3.conf
-    - |
-      ssh $EC2_USER@$EC2_HOST 'bash -s' <<'EOF'
-        set -e
-        echo "📁 Repository klonen oder updaten..."
-        cd sem3-template || git clone https://gitlab.com/Cancani/sem3-template.git && cd sem3-template
-        git pull
 
-        echo "🐍 Python Umgebung einrichten..."
-        [ -d venv ] || python3 -m venv venv
-        source venv/bin/activate
-        pip install -r requirements.txt
+    - echo "🚀 Sende Docker Compose-Dateien..."
+    - scp docker-compose.prod.yaml $EC2_USER@$EC2_HOST:/home/$EC2_USER/docker-compose.prod.yaml
 
-        echo "⚙️  systemd-Service deployen..."
-        sudo cp systemd/flask.service /etc/systemd/system/
-        sudo systemctl daemon-reexec
-        sudo systemctl enable flask
-        sudo systemctl restart flask
-
-        echo "🌐 Nginx Config kopieren..."
-        sudo cp /tmp/nginx_sem3.conf /etc/nginx/sites-available/sem3
-        sudo ln -sf /etc/nginx/sites-available/sem3 /etc/nginx/sites-enabled/sem3
-        sudo nginx -t && sudo systemctl reload nginx
-
-        echo "✅ Nginx + Gunicorn + Flask Deployment complete!"
-      EOF
-        rules:
-        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - echo "📦 Starte Compose Deploy auf EC2..."
+    - ssh $EC2_USER@$EC2_HOST "
+        cd /home/$EC2_USER/sem3-template &&
+        git pull &&
+        docker-compose -f /home/$EC2_USER/docker-compose.prod.yaml up --build -d
+      "
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
