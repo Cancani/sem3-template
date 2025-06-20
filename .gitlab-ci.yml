@@ -13,8 +13,8 @@ deploy-job:
     - echo "$EC2_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -t rsa "$EC2_HOST" >> ~/.ssh/known_hosts
-
-    - ssh $EC2_USER@$EC2_HOST <<'EOF'
+    - |
+      ssh $EC2_USER@$EC2_HOST 'bash -s' <<'EOF'
         set -e
         echo "📁 Repository klonen oder updaten..."
         cd sem3-template || git clone https://gitlab.com/Cancani/sem3-template.git && cd sem3-template
@@ -32,7 +32,7 @@ deploy-job:
         sudo systemctl restart flask
 
         echo "🌐 Nginx Config erstellen..."
-        sudo tee /etc/nginx/sites-available/sem3 <<NGINX
+        sudo tee /etc/nginx/sites-available/sem3 > /dev/null <<NGINX
 server {
     listen 80;
     server_name $EC2_HOST;
