@@ -14,6 +14,7 @@ deploy-job:
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -t rsa "$EC2_HOST" >> ~/.ssh/known_hosts
     - |
+      scp nginx/sem3 $EC2_USER@$EC2_HOST:/tmp/nginx_sem3.conf
       ssh $EC2_USER@$EC2_HOST 'bash -s' <<'EOF'
         set -e
         echo "📁 Repository klonen oder updaten..."
@@ -31,19 +32,8 @@ deploy-job:
         sudo systemctl enable flask
         sudo systemctl restart flask
 
-        echo "🌐 Nginx Config erstellen..."
-        sudo tee /etc/nginx/sites-available/sem3 > /dev/null <<NGINX
-server {
-    listen 80;
-    server_name $EC2_HOST;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/ubuntu/sem3-template/app.sock;
-    }
-}
-NGINX
-
+        echo "🌐 Nginx Config kopieren..."
+        sudo cp /tmp/nginx_sem3.conf /etc/nginx/sites-available/sem3
         sudo ln -sf /etc/nginx/sites-available/sem3 /etc/nginx/sites-enabled/sem3
         sudo nginx -t && sudo systemctl reload nginx
 
