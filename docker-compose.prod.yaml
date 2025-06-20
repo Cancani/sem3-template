@@ -1,9 +1,9 @@
-version: "3.9"
+version: '3.8'
 
 services:
   pdf-service:
     build: .
-    container_name: pdf_microservice
+    image: pdf-service:latest
+    container_name: pdf-service
     ports:
-      - "80:5000"
-    restart: always
+      - "5000:5000"
