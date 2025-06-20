@@ -1,7 +1,7 @@
 from flask import Blueprint, request, send_file, render_template
 from datetime import datetime
 import os
-import pdfkit
+from weasyprint import HTML
 
 pdf_bp = Blueprint("pdf", __name__)
 
@@ -23,6 +23,6 @@ def generate_receipt():
     )
 
     pdf_path = "/tmp/receipt.pdf"
-    pdfkit.from_string(html, pdf_path)
+    HTML(string=html).write_pdf(pdf_path)
 
     return send_file(pdf_path, as_attachment=True, download_name="quittung.pdf")

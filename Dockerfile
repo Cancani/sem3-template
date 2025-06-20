@@ -1,9 +1,11 @@
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y \
-    wkhtmltopdf \
-    xfonts-75dpi \
-    xfonts-base \
+    build-essential \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libffi-dev \
+    libcairo2 \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
