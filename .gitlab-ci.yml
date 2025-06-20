@@ -13,8 +13,8 @@ deploy-job:
     - echo "$EC2_KEY" > ~/.ssh/id_rsa
     - chmod 600 ~/.ssh/id_rsa
     - ssh-keyscan -t rsa "$EC2_HOST" >> ~/.ssh/known_hosts
+    - scp nginx/sem3 $EC2_USER@$EC2_HOST:/tmp/nginx_sem3.conf
     - |
-      scp nginx/sem3 $EC2_USER@$EC2_HOST:/tmp/nginx_sem3.conf
       ssh $EC2_USER@$EC2_HOST 'bash -s' <<'EOF'
         set -e
         echo "📁 Repository klonen oder updaten..."
@@ -38,6 +38,6 @@ deploy-job:
         sudo nginx -t && sudo systemctl reload nginx
 
         echo "✅ Nginx + Gunicorn + Flask Deployment complete!"
-EOF
-  rules:
-    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      EOF
+        rules:
+        - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
