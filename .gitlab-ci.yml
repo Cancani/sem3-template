@@ -26,23 +26,23 @@ deploy-job:
   stage: deploy
   image: alpine
   before_script:
-    - apk add gettext openssh-client
+    - apk add --no-cache gettext openssh-client
   script:
     - eval `ssh-agent`
-    - ssh-add <(echo "$SSH_PRIVATE_KEY")
+    - ssh-add "$EC2_KEY"
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - touch ~/.ssh/known_hosts
     - chmod 600 ~/.ssh/known_hosts
-    - ssh-keyscan -t rsa $DEPLOY_TARGET >> ~/.ssh/known_hosts
+    - ssh-keyscan -t rsa $EC2_HOST >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
 
-    - echo "📦 Sende Compose-Datei"
-    - scp docker-compose.prod.yaml $DEPLOY_TARGET_USER@$DEPLOY_TARGET:/home/$DEPLOY_TARGET_USER/compose_pdf.yaml
+    - echo "Sende Compose-Datei"
+    - scp docker-compose.prod.yaml $EC2_USER@$EC2_HOST:/home/$EC2_USER/compose_pdf.yaml
 
-    - echo "🚀 Starte Deployment"
-    - ssh $DEPLOY_TARGET_USER@$DEPLOY_TARGET "
-        cd /home/$DEPLOY_TARGET_USER;
+    - echo "Starte Deployment"
+    - ssh $EC2_USER@$EC2_HOST "
+        cd /home/$EC2_USER;
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
         docker compose -f compose_pdf.yaml pull;
         docker compose -f compose_pdf.yaml up -d
