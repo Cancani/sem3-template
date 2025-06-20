@@ -1,27 +1,51 @@
 stages:
+  - build
   - deploy
 
-deploy-prod:
+build-job:
+  image: docker:cli
+  stage: build
+  services:
+    - docker:dind
+  variables:
+    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  before_script:
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+  script:
+    - docker build -f Dockerfile --pull -t "$DOCKER_IMAGE_NAME" .
+    - docker push "$DOCKER_IMAGE_NAME"
+    - |
+      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
+        docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
+        docker push "$CI_REGISTRY_IMAGE:latest"
+      fi
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+
+deploy-job:
   stage: deploy
   image: alpine
   before_script:
-    - apk add --no-cache openssh-client bash
+    - apk add gettext openssh-client
   script:
-    - echo "🔐 Setup SSH Key..."
+    - eval `ssh-agent`
+    - ssh-add <(echo "$SSH_PRIVATE_KEY")
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
-    - echo "$EC2_KEY" > ~/.ssh/id_rsa
-    - chmod 600 ~/.ssh/id_rsa
-    - ssh-keyscan -t rsa "$EC2_HOST" >> ~/.ssh/known_hosts
+    - touch ~/.ssh/known_hosts
+    - chmod 600 ~/.ssh/known_hosts
+    - ssh-keyscan -t rsa $DEPLOY_TARGET >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
 
-    - echo "🚀 Sende Docker Compose-Dateien..."
-    - scp docker-compose.prod.yaml $EC2_USER@$EC2_HOST:/home/$EC2_USER/docker-compose.prod.yaml
+    - echo "📦 Sende Compose-Datei"
+    - scp docker-compose.prod.yaml $DEPLOY_TARGET_USER@$DEPLOY_TARGET:/home/$DEPLOY_TARGET_USER/compose_pdf.yaml
 
-    - echo "📦 Starte Compose Deploy auf EC2..."
-    - ssh $EC2_USER@$EC2_HOST "
-        cd /home/$EC2_USER/sem3-template &&
-        git pull &&
-        docker-compose -f /home/$EC2_USER/docker-compose.prod.yaml up --build -d
+    - echo "🚀 Starte Deployment"
+    - ssh $DEPLOY_TARGET_USER@$DEPLOY_TARGET "
+        cd /home/$DEPLOY_TARGET_USER;
+        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
+        docker compose -f compose_pdf.yaml pull;
+        docker compose -f compose_pdf.yaml up -d
       "
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
