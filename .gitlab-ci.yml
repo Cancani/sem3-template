@@ -29,6 +29,7 @@ deploy-job:
     - apk add --no-cache gettext openssh-client
   script:
     - eval `ssh-agent`
+    - chmod 600 "$EC2_KEY"
     - ssh-add "$EC2_KEY"
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
