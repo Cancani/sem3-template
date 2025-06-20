@@ -1,12 +1,8 @@
 from flask import Flask
-from app.routes.pdf import pdf_bp  # <--- Importiere den Blueprint
+from app.routes.pdf import pdf_bp
 
 app = Flask(__name__)
-app.register_blueprint(pdf_bp)  # <--- Registriere den Blueprint
-
-@app.route('/')
-def index():
-    return 'PDF Microservice is running'
+app.register_blueprint(pdf_bp)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(debug=True)

@@ -38,15 +38,15 @@ deploy-job:
     - ssh-keyscan -t rsa $EC2_HOST >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
 
-    - echo "Sende Compose-Datei"
+    - echo "📦 Sende Compose-Datei"
     - scp docker-compose.prod.yaml $EC2_USER@$EC2_HOST:/home/$EC2_USER/compose_pdf.yaml
 
-    - echo "Starte Deployment mit docker-compose"
+    - echo "🚀 Starte Deployment mit sudo docker-compose"
     - ssh $EC2_USER@$EC2_HOST "
         cd /home/$EC2_USER;
-        docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
-        docker-compose -f compose_pdf.yaml pull;
-        docker-compose -f compose_pdf.yaml up -d
+        sudo docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
+        sudo docker-compose -f compose_pdf.yaml pull;
+        sudo docker-compose -f compose_pdf.yaml up -d
       "
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
