@@ -41,12 +41,12 @@ deploy-job:
     - echo "Sende Compose-Datei"
     - scp docker-compose.prod.yaml $EC2_USER@$EC2_HOST:/home/$EC2_USER/compose_pdf.yaml
 
-    - echo "Starte Deployment"
+    - echo "Starte Deployment mit docker-compose"
     - ssh $EC2_USER@$EC2_HOST "
         cd /home/$EC2_USER;
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY;
-        docker compose -f compose_pdf.yaml pull;
-        docker compose -f compose_pdf.yaml up -d
+        docker-compose -f compose_pdf.yaml pull;
+        docker-compose -f compose_pdf.yaml up -d
       "
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
