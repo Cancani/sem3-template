@@ -5,20 +5,49 @@ deploy-job:
   stage: deploy
   image: alpine
   before_script:
-    - apk add --no-cache openssh bash
+    - apk add --no-cache openssh-client bash
   script:
-    - chmod 600 "$EC2_KEY"
-    - echo "🚀 Deploying Flask Microservice..."
-    - |
-      ssh -o StrictHostKeyChecking=no -i "$EC2_KEY" $EC2_USER@$EC2_HOST '
-        cd ~/sem3-template || git clone https://gitlab.com/Cancani/sem3-template.git && cd sem3-template &&
-        git pull &&
-        pkill -f run.py || true &&
-        python3 -m venv venv &&
-        . venv/bin/activate &&
-        pip install --upgrade pip &&
-        pip install -r requirements.txt &&
-        nohup python3 run.py > ~/flask.log 2>&1 &
-      '
-  only:
-    - main
+    - echo "🔐 Starte Deployment zu $EC2_USER@$EC2_HOST"
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo "$EC2_KEY" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - ssh-keyscan -t rsa "$EC2_HOST" >> ~/.ssh/known_hosts
+
+    - ssh $EC2_USER@$EC2_HOST <<'EOF'
+        set -e
+        echo "📁 Repository klonen oder updaten..."
+        cd sem3-template || git clone https://gitlab.com/Cancani/sem3-template.git && cd sem3-template
+        git pull
+
+        echo "🐍 Python Umgebung einrichten..."
+        [ -d venv ] || python3 -m venv venv
+        source venv/bin/activate
+        pip install -r requirements.txt
+
+        echo "⚙️  systemd-Service deployen..."
+        sudo cp systemd/flask.service /etc/systemd/system/
+        sudo systemctl daemon-reexec
+        sudo systemctl enable flask
+        sudo systemctl restart flask
+
+        echo "🌐 Nginx Config erstellen..."
+        sudo tee /etc/nginx/sites-available/sem3 <<NGINX
+server {
+    listen 80;
+    server_name $EC2_HOST;
+
+    location / {
+        include proxy_params;
+        proxy_pass http://unix:/home/ubuntu/sem3-template/app.sock;
+    }
+}
+NGINX
+
+        sudo ln -sf /etc/nginx/sites-available/sem3 /etc/nginx/sites-enabled/sem3
+        sudo nginx -t && sudo systemctl reload nginx
+
+        echo "✅ Nginx + Gunicorn + Flask Deployment complete!"
+EOF
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
