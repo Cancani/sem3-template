@@ -16,6 +16,7 @@ packages:
 
 runcmd:
   - usermod -aG docker ubuntu
+  - newgrp docker
   - cd /home/ubuntu
   - git clone https://gitlab.com/Cancani/sem3-template.git
   - cd sem3-template
