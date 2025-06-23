@@ -38,8 +38,10 @@ deploy_prod:
     - scp -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no $COMPOSE_FILE $EC2_USER@$EC2_HOST:$REMOTE_COMPOSE_PATH
     - ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
+        docker stop \$(docker ps -q) || true &&
+        docker system prune -f &&
         docker-compose -f $REMOTE_COMPOSE_PATH pull &&
-        docker-compose -f $REMOTE_COMPOSE_PATH up -d
+        docker-compose -f $REMOTE_COMPOSE_PATH up -d --force-recreate
       "
   only:
     - main
