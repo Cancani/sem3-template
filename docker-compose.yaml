@@ -1,9 +1,6 @@
-version: '3.8'
-
 services:
   pdf-service:
-    build: .
-    image: pdf-service:latest
-    container_name: pdf-service
+    image: registry.gitlab.com/cancani/sem3-template/pdf-service:latest
     ports:
       - "5000:5000"
+    restart: unless-stopped
