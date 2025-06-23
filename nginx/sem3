@@ -1,9 +1,0 @@
-server {
-    listen 80;
-    server_name $EC2_HOST;
-
-    location / {
-        include proxy_params;
-        proxy_pass http://unix:/home/ubuntu/sem3-template/app.sock;
-    }
-}
