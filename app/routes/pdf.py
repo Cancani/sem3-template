@@ -1,3 +1,12 @@
+from flask import Blueprint, request, jsonify, render_template, send_file, make_response
+from datetime import datetime
+from weasyprint import HTML
+import base64
+import os
+import io
+
+pdf_bp = Blueprint("pdf", __name__)
+
 @pdf_bp.route("/generate_receipt", methods=["POST"])
 def generate_receipt():
     try:
@@ -5,13 +14,9 @@ def generate_receipt():
         borrower = data.get("borrower_name")
         device = data.get("device_name")
         staff = data.get("issued_by", "—")
-        borrower_email = data.get("borrower_email", "")
-        device_specs = data.get("device_specs", "")
-        
         loan_date = datetime.now().strftime("%d.%m.%Y %H:%M")
         return_date = datetime.now().strftime("%d.%m.%Y") + " – 17:00 Uhr"
 
-        # Validierung der erforderlichen Daten
         if not borrower or not device:
             return jsonify({"error": "borrower_name und device_name sind erforderlich"}), 400
 
@@ -21,19 +26,13 @@ def generate_receipt():
             device=device,
             loan_date=loan_date,
             return_date=return_date,
-            staff=staff,
-            borrower_email=borrower_email,
-            device_specs=device_specs
+            staff=staff
         )
 
-        # PDF in Memory erstellen
         pdf_bytes = HTML(string=html).write_pdf()
-        
-        # PDF als direkter Download zurückgeben
         pdf_buffer = io.BytesIO(pdf_bytes)
         pdf_buffer.seek(0)
         
-        # Dateiname mit Timestamp für Eindeutigkeit
         safe_borrower = "".join(c for c in borrower if c.isalnum() or c in (' ', '-', '_')).rstrip()
         filename = f"TBZ_Quittung_{safe_borrower.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d_%H%M')}.pdf"
         
@@ -44,7 +43,6 @@ def generate_receipt():
             download_name=filename
         ))
         
-        # CORS-Header für PowerApps
         response.headers['Access-Control-Allow-Origin'] = '*'
         response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
         response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
@@ -53,3 +51,11 @@ def generate_receipt():
         
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
+@pdf_bp.route("/generate_receipt", methods=["OPTIONS"])
+def handle_options():
+    response = make_response()
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    return response
