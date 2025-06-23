@@ -20,5 +20,5 @@ runcmd:
   - cd /home/ubuntu
   - git clone https://gitlab.com/Cancani/sem3-template.git
   - cd sem3-template
-  - docker-compose -f docker-compose.prod.yaml up --build -d
+  - docker-compose -f docker-compose.yaml up --build -d
   - echo "PDF Microservice running via Docker" > /home/ubuntu/DEPLOYED.txt
