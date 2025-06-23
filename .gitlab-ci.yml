@@ -2,48 +2,44 @@ stages:
   - build
   - deploy
 
-build-job:
-  image: docker:cli
+build_image:
   stage: build
+  image: docker:latest
   services:
     - docker:dind
   variables:
-    DOCKER_IMAGE_NAME: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
-  before_script:
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" $CI_REGISTRY
+    DOCKER_DRIVER: overlay2
   script:
-    - docker build -f Dockerfile --pull -t "$DOCKER_IMAGE_NAME" .
-    - docker push "$DOCKER_IMAGE_NAME"
-    - |
-      if [[ "$CI_COMMIT_BRANCH" == "$CI_DEFAULT_BRANCH" ]]; then
-        docker tag "$DOCKER_IMAGE_NAME" "$CI_REGISTRY_IMAGE:latest"
-        docker push "$CI_REGISTRY_IMAGE:latest"
-      fi
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "main"'
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+    - docker build -t $CI_REGISTRY_IMAGE:latest .
+    - docker push $CI_REGISTRY_IMAGE:latest
+  only:
+    - main
 
 deploy_prod:
   stage: deploy
   image: alpine:latest
+  variables:
+    COMPOSE_FILE: docker-compose.yaml
+    REMOTE_COMPOSE_PATH: /home/$EC2_USER/compose_pdf.yaml
   before_script:
     - apk add --no-cache openssh
     - mkdir -p /root/.ssh
-    - eval $(ssh-agent -s)
     - echo "$EC2_KEY" > /root/.ssh/id_rsa
     - chmod 600 /root/.ssh/id_rsa
+    - eval $(ssh-agent -s)
     - ssh-add /root/.ssh/id_rsa
     - chmod 700 /root/.ssh
     - touch /root/.ssh/known_hosts
     - chmod 600 /root/.ssh/known_hosts
     - ssh-keyscan -t rsa $EC2_HOST >> /root/.ssh/known_hosts
     - chmod 644 /root/.ssh/known_hosts
-
   script:
-    - scp docker-compose.yaml $EC2_USER@$EC2_HOST:/home/$EC2_USER/compose_pdf.yaml
-    - ssh $EC2_USER@$EC2_HOST "
+    - scp -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no $COMPOSE_FILE $EC2_USER@$EC2_HOST:$REMOTE_COMPOSE_PATH
+    - ssh -i /root/.ssh/id_rsa -o StrictHostKeyChecking=no $EC2_USER@$EC2_HOST "
         docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY &&
-        docker compose -f /home/$EC2_USER/compose_pdf.yaml pull &&
-        docker compose -f /home/$EC2_USER/compose_pdf.yaml up -d
+        docker compose -f $REMOTE_COMPOSE_PATH pull &&
+        docker compose -f $REMOTE_COMPOSE_PATH up -d
       "
   only:
     - main
